@@ -1,0 +1,5 @@
+compilar
+g++ -o pong Example2_4.cpp -lGL -lglut -lGLU
+
+ejecutar 
+./pong
