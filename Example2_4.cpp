@@ -6,6 +6,11 @@
 #include <math.h>
 #include <stdio.h>
 
+// numeros aleatorios
+#include <cstdlib>
+// tiempo
+#include <ctime>
+
 #define PI 3.1415926535898
 
 // Posicion x y y de la pelota
@@ -22,6 +27,16 @@ double speed = 3.0;
 int xsize = 640;
 // Tamanio y del juego
 int ysize = 480;
+// Posicion x y y del rectangulo izquierdo
+double rectIzqXpos, rectIzqYpos;
+// Direccion en x del rectangulo izquierdo
+double rectIzqXdir;
+// Posicion x y y del rectangulo derecho
+double rectDerXpos, rectDerYpos;
+// Direccion en x del rectangulo derecho
+double rectDerXdir;
+// Velocidad de los rectangulos
+double rectSpeed = 2.0;
 
 // Matrices de transformacion
 GLfloat T1[16] = {1., 0., 0., 0.,
@@ -57,13 +72,29 @@ void MyCircle2f(GLfloat centerx, GLfloat centery, GLfloat radius)
 }
 
 // Radio de la pelota
-GLfloat RadiusOfBall = 10.;
+GLfloat RadiusOfBall = 10.0;
 
-// Funcion para dibujar la pelota, centrada en el origen y con color blanco
+// Funcion para dibujar la pelota, con color blanco
 void draw_ball()
 {
   glColor3f(1.0, 1.0, 1.0);
-  MyCircle2f(0., 0., RadiusOfBall);
+  MyCircle2f(0.0, 0.0, RadiusOfBall);
+}
+
+// Alto y ancho del rectangulo
+GLfloat Alto = 60.0;
+GLfloat Ancho = 10.0;
+
+// Funcion para dibujar un rectangulo blanco
+void draw_rectangle(GLfloat x, GLfloat y, GLfloat width, GLfloat height)
+{
+  glColor3f(1.0, 1.0, 1.0);
+  glBegin(GL_QUADS);
+  glVertex2f(x, y);
+  glVertex2f(x + width, y);
+  glVertex2f(x + width, y + height);
+  glVertex2f(x, y + height);
+  glEnd();
 }
 
 // Funcion para mostrar en la ventana
@@ -106,11 +137,6 @@ void Display(void)
   // Si toca el suelo, cambia la direccion de la pelota hacia arriba
   else if (ypos <= RadiusOfBall)
     ydir = 1;
-
-  // Aplicamos la transformacion de la pelota
-  T[12] = xpos;
-  T[13] = ypos;
-  glLoadMatrixf(T);
 
   /*
   // 160 is max X value in our world
@@ -182,8 +208,27 @@ void Display(void)
   glMultMatrixf(T1);
   */
 
+  // Dibujar rectangulos
+  // Guardar la matriz acutal
+  glPushMatrix();
+  // Dibujar los rectangulos
+  draw_rectangle(rectIzqXpos, rectIzqYpos, Ancho, Alto);
+  draw_rectangle(rectDerXpos, rectDerYpos, Ancho, Alto);
+  // Restaurar la matriz
+  glPopMatrix();
+
+  // Dibujar la pelota
+  // Guardar la matriz acutal
+  glPushMatrix();
+  T[12] = xpos;
+  T[13] = ypos;
+  // Aplicar transformacion
+  glLoadMatrixf(T);
   // Dibujar la pelota
   draw_ball();
+  // Restaurar la matriz
+  glPopMatrix();
+
   // Actualizar la ventana
   glutPostRedisplay();
 }
@@ -203,20 +248,27 @@ void reshape(int w, int h)
   glLoadIdentity();
 }
 
-// Funcion para inicializar la ventana y parametros de la pelota
+// Funcion para inicializar la ventana, parametros de la pelota y de los rectangulos
 void init(void)
 {
   // Pone el color de limpieza en negro?
   glClearColor(0.0, 0.0, 0.0, 1.0);
-  // Inicializa la posicion en el centro y parametros de la pelota
-  xpos = 170;
-  ypos = 240;
+  // Inicializa la posicion y parametros de la pelota
+  xpos = xsize / 2;
+  srand(time(0));
+  ypos = rand() % (ysize - (int)RadiusOfBall * 2) + RadiusOfBall;
+  printf("%f\n", ypos);
   xdir = 1;
   ydir = 1;
   sx = 1.;
   sy = 1.;
   squash = 0.9;
   rot = 0;
+  // Inicializa la posicion de los rectangulos
+  rectIzqXpos = 70;
+  rectIzqYpos = 240;
+  rectDerXpos = 570;
+  rectDerYpos = 240;
 }
 
 // Funcion para que todo funcione
