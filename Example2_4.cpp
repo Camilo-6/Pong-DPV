@@ -21,8 +21,8 @@ double ydir, xdir;
 double sx, sy, squash;
 // Rotacion
 double rot, rdir;
-// Velocidad de la pelota
-double speed = 3.0;
+// Velocidades de la pelota
+double speed, inicialSpeed = 3.0;
 // Tamanio x del juego
 int xsize = 640;
 // Tamanio y del juego
@@ -37,6 +37,8 @@ double rectDerXpos, rectDerYpos;
 double rectDerXdir;
 // Velocidad de los rectangulos
 double rectSpeed = 2.0;
+// Puntaje de los jugadores
+int puntIzq, puntDer = 0;
 
 // Matrices de transformacion
 GLfloat T1[16] = {1., 0., 0., 0.,
@@ -82,7 +84,7 @@ void draw_ball()
 }
 
 // Alto y ancho del rectangulo
-GLfloat Alto = 60.0;
+GLfloat Alto = 70.0;
 GLfloat Ancho = 10.0;
 
 // Funcion para dibujar un rectangulo blanco
@@ -97,6 +99,17 @@ void draw_rectangle(GLfloat x, GLfloat y, GLfloat width, GLfloat height)
   glVertex2f(x + hwidth, y + hheight); // Esquina superior derecha
   glVertex2f(x - hwidth, y + hheight); // Esquina superior izquierda
   glEnd();
+}
+
+// Funcion para reiniciar la posicion del circulo
+void reiniciarCirculo()
+{
+  xpos = xsize / 2;
+  srand(time(0));
+  ypos = rand() % (ysize - (int)RadiusOfBall * 2) + RadiusOfBall;
+  xdir = (rand() % 2 == 0) ? 1 : -1;
+  ydir = (rand() % 2 == 0) ? 1 : -1;
+  speed = inicialSpeed;
 }
 
 // Funcion para mover al circulo
@@ -118,30 +131,40 @@ void colisionesCirculoParedes()
   // Si toca la pared izquierda, cambia la direccion de la pelota hacia la derecha
   if (xpos >= xsize - RadiusOfBall)
   {
-    xdir = -1;
-    // Imprimimos en consola que choco con la pared izquierda
-    printf("Choco con la pared izquierda\n");
+    printf("Punto para el jugador de la derecha\n");
+    puntDer++;
+    printf("Puntaje: %d - %d\n", puntIzq, puntDer);
+    reiniciarCirculo();
   }
 
   // Si toca la pared derecha, cambia la direccion de la pelota hacia la izquierda
   else if (xpos <= RadiusOfBall)
   {
-    xdir = 1;
-    // Imprimimos en consola que choco con la pared izquierda
-    printf("Choco con la pared izquierda\n");
+    printf("Punto para el jugador de la izquierda\n");
+    puntIzq++;
+    printf("Puntaje: %d - %d\n", puntIzq, puntDer);
+    reiniciarCirculo();
   }
 
   // Si toca el techo, cambia la direccion de la pelota hacia abajo
   if (ypos >= ysize - RadiusOfBall)
+  {
     ydir = -1;
+    // Ajustamos la posicion de la pelota para que no se quede pegada al techo
+    ypos = ysize - RadiusOfBall;
+  }
 
   // Si toca el suelo, cambia la direccion de la pelota hacia arriba
   else if (ypos <= RadiusOfBall)
+  {
     ydir = 1;
+    // Ajustamos la posicion de la pelota para que no se quede pegada al suelo
+    ypos = RadiusOfBall;
+  }
 }
 
-// Funcion para detectar colisiones entre el circulo y el rectangulo izquierdo
-void colisionesCirculoRectIzq()
+// Funcion para detectar colisiones entre el circulo y un rectangulo
+void colisionesCirculoRect(double rectX, double rectY)
 {
   // Obtenemos las esquinas del circulo
   GLfloat x1 = xpos - RadiusOfBall; // Esquina inferior izquierda
@@ -150,13 +173,13 @@ void colisionesCirculoRectIzq()
   GLfloat y2 = ypos + RadiusOfBall; // Esquina superior derecha
 
   // Obtenemos las esquinas del rectangulo
-  GLfloat rectIzqX1 = rectIzqXpos - Ancho / 2.0; // Esquina inferior izquierda
-  GLfloat rectIzqX2 = rectIzqXpos + Ancho / 2.0; // Esquina inferior derecha
-  GLfloat rectIzqY1 = rectIzqYpos - Alto / 2.0;  // Esquina superior izquierda
-  GLfloat rectIzqY2 = rectIzqYpos + Alto / 2.0;  // Esquina superior derecha
+  GLfloat rectX1 = rectX - Ancho / 2.0; // Esquina inferior izquierda
+  GLfloat rectX2 = rectX + Ancho / 2.0; // Esquina inferior derecha
+  GLfloat rectY1 = rectY - Alto / 2.0;  // Esquina superior izquierda
+  GLfloat rectY2 = rectY + Alto / 2.0;  // Esquina superior derecha
 
   // Revisamos si hay colision
-  if (!(x1 < rectIzqX2 and x2 > rectIzqX1 and y1 < rectIzqY2 and y2 > rectIzqY1))
+  if (!(x1 < rectX2 and x2 > rectX1 and y1 < rectY2 and y2 > rectY1))
   {
     // Si no hay colision, no hacemos nada
     return;
@@ -165,15 +188,48 @@ void colisionesCirculoRectIzq()
   // Detectamos con que lado del rectangulo choco
   // Calculamos penetracion en x
   GLfloat dx = 0.0;
-  GLfloat aux1 = x2 - rectIzqX1;
-  GLfloat aux2 = rectIzqX2 - x1;
+  GLfloat aux1 = x2 - rectX1;
+  GLfloat aux2 = rectX2 - x1;
   dx = (aux1 < aux2) ? aux1 : aux2;
   // Calculamos penetracion en y
   GLfloat dy = 0.0;
-  aux1 = y2 - rectIzqY1;
-  aux2 = rectIzqY2 - y1;
+  aux1 = y2 - rectY1;
+  aux2 = rectY2 - y1;
   dy = (aux1 < aux2) ? aux1 : aux2;
-  // TODO
+
+  // Revisamos si la colision fue en x o en y
+  if (dx < dy)
+  {
+    // Si la colision fue en x, cambiamos la direccion de la pelota en x
+    xdir = -xdir;
+    // Ajustamos la posicion de la pelota para que no se quede pegada al rectangulo
+    if (xpos < rectX)
+    {
+      // Si la pelota esta a la izquierda del rectangulo, la movemos a la izquierda
+      xpos = rectX - RadiusOfBall - Ancho / 2.0;
+    }
+    else
+    {
+      // Si la pelota esta a la derecha del rectangulo, la movemos a la derecha
+      xpos = rectX + RadiusOfBall + Ancho / 2.0;
+    }
+  }
+  else
+  {
+    // Si la colision fue en y, cambiamos la direccion de la pelota en y
+    ydir = -ydir;
+    // Ajustamos la posicion de la pelota para que no se quede pegada al rectangulo
+    if (ypos < rectY)
+    {
+      // Si la pelota esta abajo del rectangulo, la movemos abajo
+      ypos = rectY - RadiusOfBall - Alto / 2.0;
+    }
+    else
+    {
+      // Si la pelota esta arriba del rectangulo, la movemos arriba
+      ypos = rectY + RadiusOfBall + Alto / 2.0;
+    }
+  }
 }
 
 // Funcion para mostrar en la ventana
@@ -189,8 +245,8 @@ void Display(void)
   moverCirculo();
 
   // Detectar colisiones con los rectangulos, usaremos el circulo como un cuadrado por simplicidad
-  colisionesCirculoRectIzq();
-  // rectangulo derecho
+  colisionesCirculoRect(rectIzqXpos, rectIzqYpos);
+  colisionesCirculoRect(rectDerXpos, rectDerYpos);
 
   // Detectar colisiones con las paredes
   colisionesCirculoParedes();
@@ -311,12 +367,7 @@ void init(void)
   // Pone el color de limpieza en negro?
   glClearColor(0.0, 0.0, 0.0, 1.0);
   // Inicializa la posicion y parametros de la pelota
-  xpos = xsize / 2;
-  srand(time(0));
-  ypos = rand() % (ysize - (int)RadiusOfBall * 2) + RadiusOfBall;
-  printf("%f\n", ypos);
-  xdir = (rand() % 2 == 0) ? 1 : -1;
-  ydir = (rand() % 2 == 0) ? 1 : -1;
+  reiniciarCirculo();
   sx = 1.;
   sy = 1.;
   squash = 0.9;
