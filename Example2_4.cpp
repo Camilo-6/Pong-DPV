@@ -13,15 +13,15 @@
 
 #define PI 3.1415926535898
 
-// Posicion x y y de la pelota, son el centro de la pelota
+// Posicion x y y del circulo, son el centro del circulo
 double xpos, ypos;
-// Direccion en x y y de la pelota
+// Direccion en x y y del circulo
 double ydir, xdir;
 // Factores de escala en x y y
 double sx, sy, squash;
 // Rotacion
 double rot, rdir;
-// Velocidades de la pelota
+// Velocidades del circulo
 double speed, inicialSpeed = 3.0;
 // Tamanio x del juego
 int xsize = 640;
@@ -73,21 +73,21 @@ void MyCircle2f(GLfloat centerx, GLfloat centery, GLfloat radius)
   glEnd();
 }
 
-// Radio de la pelota
+// Radio del circulo
 GLfloat RadiusOfBall = 10.0;
 
-// Funcion para dibujar la pelota, con color blanco
+// Funcion para dibujar el circulo, con color blanco
 void draw_ball()
 {
   glColor3f(1.0, 1.0, 1.0);
   MyCircle2f(0.0, 0.0, RadiusOfBall);
 }
 
-// Alto y ancho del rectangulo
+// Alto y ancho de los rectangulos
 GLfloat Alto = 70.0;
 GLfloat Ancho = 10.0;
 
-// Funcion para dibujar un rectangulo blanco
+// Funcion para dibujar un rectangulo, con color blanco
 void draw_rectangle(GLfloat x, GLfloat y, GLfloat width, GLfloat height)
 {
   glColor3f(1.0, 1.0, 1.0);
@@ -101,7 +101,7 @@ void draw_rectangle(GLfloat x, GLfloat y, GLfloat width, GLfloat height)
   glEnd();
 }
 
-// Funcion para reiniciar la posicion del circulo
+// Funcion para reiniciar la posicion, velocidad y direccion del circulo
 void reiniciarCirculo()
 {
   xpos = xsize / 2;
@@ -115,28 +115,28 @@ void reiniciarCirculo()
 // Funcion para mover al circulo
 void moverCirculo()
 {
-  // Movimiento de la pelota en el eje x
+  // Movimiento en el eje x
   xpos = xpos + xdir * speed;
 
-  // Movimiento de la pelota en el eje y
+  // Movimiento en el eje y
   ypos = ypos + ydir * speed;
 
-  // Experimental, aumentar la velocidad de la pelota
+  // Experimental, aumentar la velocidad del circulo
   speed += 0.001;
 }
 
 // Funcion para mover un rectangulo
 void moverRectangulo(double &rectYpos, double rectYdir, double rectSpeed)
 {
-  // Movimiento del rectangulo en el eje y
+  // Movimiento en el eje y
   rectYpos = rectYpos + rectYdir * rectSpeed;
 
-  // Si avanza arriba de la ventana, lo movemos abajo
+  // Si avanza arriba del techo, lo movemos abajo
   if (rectYpos > ysize - Alto / 2.0)
   {
     rectYpos = ysize - Alto / 2.0;
   }
-  // Si avanza abajo de la ventana, lo movemos arriba
+  // Si avanza abajo del suelo, lo movemos arriba
   else if (rectYpos < Alto / 2.0)
   {
     rectYpos = Alto / 2.0;
@@ -149,39 +149,40 @@ void colisionesCirculoParedes()
   // Si toca la pared derecha
   if (xpos >= xsize - RadiusOfBall)
   {
+    // Aumentamos el puntaje del jugador de la izquierda
     printf("Punto para el jugador de la izquierda\n");
     puntIzq++;
     printf("Puntaje: %d - %d\n", puntIzq, puntDer);
+    // Reiniciamos el circulo
     reiniciarCirculo();
   }
-
   // Si toca la pared izquierda
   else if (xpos <= RadiusOfBall)
   {
+    // Aumentamos el puntaje del jugador de la derecha
     printf("Punto para el jugador de la derecha\n");
     puntDer++;
     printf("Puntaje: %d - %d\n", puntIzq, puntDer);
+    // Reiniciamos el circulo
     reiniciarCirculo();
   }
-
-  // Si toca el techo, cambia la direccion de la pelota hacia abajo
+  // Si toca el techo, cambia la direccion del circulo hacia abajo
   if (ypos >= ysize - RadiusOfBall)
   {
     ydir = -ydir;
-    // Ajustamos la posicion de la pelota para que no se quede pegada al techo
+    // Ajustamos la posicion del circulo para que no se quede pegada al techo
     ypos = ysize - RadiusOfBall;
   }
-
-  // Si toca el suelo, cambia la direccion de la pelota hacia arriba
+  // Si toca el suelo, cambia la direccion del circulo hacia arriba
   else if (ypos <= RadiusOfBall)
   {
     ydir = -ydir;
-    // Ajustamos la posicion de la pelota para que no se quede pegada al suelo
+    // Ajustamos la posicion del circulo para que no se quede pegada al suelo
     ypos = RadiusOfBall;
   }
 }
 
-// Funcion para detectar colisiones entre el circulo y un rectangulo
+// Funcion para detectar colisiones entre el circulo y un rectangulo, usando el circulo como un cuadrado por simplicidad
 void colisionesCirculoRect(double rectX, double rectY)
 {
   // Obtenemos las esquinas del circulo
@@ -196,14 +197,13 @@ void colisionesCirculoRect(double rectX, double rectY)
   GLfloat rectY1 = rectY - Alto / 2.0;  // Esquina superior izquierda
   GLfloat rectY2 = rectY + Alto / 2.0;  // Esquina superior derecha
 
-  // Revisamos si hay colision
+  // Revisamos si hay colision, si no hay terminamos
   if (!(x1 < rectX2 and x2 > rectX1 and y1 < rectY2 and y2 > rectY1))
   {
-    // Si no hay colision, no hacemos nada
     return;
   }
 
-  // Detectamos con que lado del rectangulo choco
+  // Detectamos de que lado fue la colision
   // Calculamos penetracion en x
   GLfloat dx = 0.0;
   GLfloat aux1 = x2 - rectX1;
@@ -215,36 +215,36 @@ void colisionesCirculoRect(double rectX, double rectY)
   aux2 = rectY2 - y1;
   dy = (aux1 < aux2) ? aux1 : aux2;
 
-  // Revisamos si la colision fue en x o en y
-  if (dx < dy)
+  // Revisamos si la colision fue en x o en y, de manera muy basica, se puede mejorar
+  if (dx == dy)
   {
-    // Si la colision fue en x, cambiamos la direccion de la pelota en x
+    // Si la colision fue en x, cambiamos la direccion del circulo en x
     xdir = -xdir;
-    // Ajustamos la posicion de la pelota para que no se quede pegada al rectangulo
+    // Ajustamos la posicion del circulo para que no se quede pegada al rectangulo
     if (xpos < rectX)
     {
-      // Si la pelota esta a la izquierda del rectangulo, la movemos a la izquierda
+      // Si el circulo esta a la izquierda del rectangulo, la movemos a la izquierda
       xpos = rectX - RadiusOfBall - Ancho / 2.0;
     }
     else
     {
-      // Si la pelota esta a la derecha del rectangulo, la movemos a la derecha
+      // Si el circulo esta a la derecha del rectangulo, la movemos a la derecha
       xpos = rectX + RadiusOfBall + Ancho / 2.0;
     }
   }
   else
   {
-    // Si la colision fue en y, cambiamos la direccion de la pelota en y
+    // Si la colision fue en y, cambiamos la direccion del circulo en y
     ydir = -ydir;
-    // Ajustamos la posicion de la pelota para que no se quede pegada al rectangulo
+    // Ajustamos la posicion del circulo para que no se quede pegada al rectangulo
     if (ypos < rectY)
     {
-      // Si la pelota esta abajo del rectangulo, la movemos abajo
+      // Si el circulo esta abajo del rectangulo, la movemos abajo
       ypos = rectY - RadiusOfBall - Alto / 2.0;
     }
     else
     {
-      // Si la pelota esta arriba del rectangulo, la movemos arriba
+      // Si el circulo esta arriba del rectangulo, la movemos arriba
       ypos = rectY + RadiusOfBall + Alto / 2.0;
     }
   }
@@ -263,10 +263,10 @@ void Display(void)
   moverRectangulo(rectIzqYpos, rectIzqYdir, rectSpeed);
   moverRectangulo(rectDerYpos, rectDerYdir, rectSpeed);
 
-  // Movemos la pelota
+  // Movemos el circulo
   moverCirculo();
 
-  // Detectar colisiones con los rectangulos, usaremos el circulo como un cuadrado por simplicidad
+  // Detectar colisiones con los rectangulos
   colisionesCirculoRect(rectIzqXpos, rectIzqYpos);
   colisionesCirculoRect(rectDerXpos, rectDerYpos);
 
@@ -330,7 +330,7 @@ void Display(void)
   T[13] = ypos;
   glLoadMatrixf(T);
 
-  // Mueve la pelota a su nueva posicion?
+  // Mueve el circulo a su nueva posicion?
   T1[13] = -RadiusOfBall;
   // Translate ball back to center
   glMultMatrixf(T1);
@@ -344,24 +344,32 @@ void Display(void)
   */
 
   // Dibujar rectangulos
-  glPushMatrix();
-  glTranslatef(rectIzqXpos, rectIzqYpos, 0);
-  draw_rectangle(0, 0, Ancho, Alto);
-  glPopMatrix();
-
-  glPushMatrix();
-  glTranslatef(rectDerXpos, rectDerYpos, 0);
-  draw_rectangle(0, 0, Ancho, Alto);
-  glPopMatrix();
-
-  // Dibujar la pelota
   // Guardar la matriz acutal
   glPushMatrix();
+  // Aplicar transformacion
+  glTranslatef(rectIzqXpos, rectIzqYpos, 0);
+  // Dibujar el rectangulo
+  draw_rectangle(0, 0, Ancho, Alto);
+  // Restaurar la matriz
+  glPopMatrix();
+  // Guardar la matriz acutal
+  glPushMatrix();
+  // Aplicar transformacion
+  glTranslatef(rectDerXpos, rectDerYpos, 0);
+  // Dibujar el rectangulo
+  draw_rectangle(0, 0, Ancho, Alto);
+  // Restaurar la matriz
+  glPopMatrix();
+
+  // Dibujar circulo
+  // Guardar la matriz acutal
+  glPushMatrix();
+  // Aplicar transformacion
   T[12] = xpos;
   T[13] = ypos;
-  // Aplicar transformacion
+  // Cambiar la matriz
   glLoadMatrixf(T);
-  // Dibujar la pelota
+  // Dibujar el circulo
   draw_ball();
   // Restaurar la matriz
   glPopMatrix();
@@ -385,18 +393,18 @@ void reshape(int w, int h)
   glLoadIdentity();
 }
 
-// Funcion para inicializar la ventana, parametros de la pelota y de los rectangulos
+// Funcion para inicializar la ventana, parametros del circulo y de los rectangulos
 void init(void)
 {
   // Pone el color de limpieza en negro?
   glClearColor(0.0, 0.0, 0.0, 1.0);
-  // Inicializa la posicion y parametros de la pelota
+  // Inicializa la posicion y parametros del circulo
   reiniciarCirculo();
   sx = 1.;
   sy = 1.;
   squash = 0.9;
   rot = 0;
-  // Inicializa la posicion de los rectangulos
+  // Inicializa la posicion y parametros de los rectangulos
   rectIzqXpos = 70;
   rectIzqYpos = 240;
   rectIzqYdir = 0;
