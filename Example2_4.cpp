@@ -197,9 +197,10 @@ void colisionesCirculoRect(double rectX, double rectY)
   GLfloat rectY1 = rectY - Alto / 2.0;  // Esquina superior izquierda
   GLfloat rectY2 = rectY + Alto / 2.0;  // Esquina superior derecha
 
-  // Revisamos si hay colision, si no hay terminamos
+  // Revisamos si hay colision
   if (!(x1 < rectX2 and x2 > rectX1 and y1 < rectY2 and y2 > rectY1))
   {
+    // Si no hay colision, terminamos
     return;
   }
 
@@ -215,38 +216,29 @@ void colisionesCirculoRect(double rectX, double rectY)
   aux2 = rectY2 - y1;
   dy = (aux1 < aux2) ? aux1 : aux2;
 
-  // Revisamos si la colision fue en x o en y, de manera muy basica, se puede mejorar
+  // Revisamos la direccion de la colision
   if (dx == dy)
+  {
+    // Si la colision fue en diagonal, cambiamos la direccion del circulo en x y y
+    xdir = -xdir;
+    ydir = -ydir;
+    // Ajustamos la posicion del circulo para que no se quede pegada al rectangulo
+    xpos = (xpos < rectX) ? rectX - Ancho / 2.0 - RadiusOfBall : rectX + Ancho / 2.0 + RadiusOfBall;
+    ypos = (ypos < rectY) ? rectY - Alto / 2.0 - RadiusOfBall : rectY + Alto / 2.0 + RadiusOfBall;
+  }
+  else if (dx < dy)
   {
     // Si la colision fue en x, cambiamos la direccion del circulo en x
     xdir = -xdir;
     // Ajustamos la posicion del circulo para que no se quede pegada al rectangulo
-    if (xpos < rectX)
-    {
-      // Si el circulo esta a la izquierda del rectangulo, la movemos a la izquierda
-      xpos = rectX - RadiusOfBall - Ancho / 2.0;
-    }
-    else
-    {
-      // Si el circulo esta a la derecha del rectangulo, la movemos a la derecha
-      xpos = rectX + RadiusOfBall + Ancho / 2.0;
-    }
+    xpos = (xpos < rectX) ? rectX - Ancho / 2.0 - RadiusOfBall : rectX + Ancho / 2.0 + RadiusOfBall;
   }
   else
   {
     // Si la colision fue en y, cambiamos la direccion del circulo en y
     ydir = -ydir;
     // Ajustamos la posicion del circulo para que no se quede pegada al rectangulo
-    if (ypos < rectY)
-    {
-      // Si el circulo esta abajo del rectangulo, la movemos abajo
-      ypos = rectY - RadiusOfBall - Alto / 2.0;
-    }
-    else
-    {
-      // Si el circulo esta arriba del rectangulo, la movemos arriba
-      ypos = rectY + RadiusOfBall + Alto / 2.0;
-    }
+    ypos = (ypos < rectY) ? rectY - Alto / 2.0 - RadiusOfBall : rectY + Alto / 2.0 + RadiusOfBall;
   }
 }
 
