@@ -35,8 +35,16 @@ double rectIzqYdir;
 double rectDerXpos, rectDerYpos;
 // Direccion en y del rectangulo derecho
 double rectDerYdir;
-// Velocidad de los rectangulos
-double rectSpeed = 2.0;
+// Booleano para saber si el rectangulo izquierdo intenta ir arriba
+bool rectIzqArriba = false;
+// Booleano para saber si el rectangulo izquierdo intenta ir abajo
+bool rectIzqAbajo = false;
+// Booleano para saber si el rectangulo derecho intenta ir arriba
+bool rectDerArriba = false;
+// Booleano para saber si el rectangulo derecho intenta ir abajo
+bool rectDerAbajo = false;
+// Velocidad de los rectangulos, procurar que sea menor o igual a la velocidad del circulo para evitar colisiones extranias
+double rectSpeed = 3.0;
 // Puntaje de los jugadores
 int puntIzq, puntDer = 0;
 
@@ -123,6 +131,17 @@ void moverCirculo()
 
   // Experimental, aumentar la velocidad del circulo
   speed += 0.001;
+}
+
+// Funcion para reiniciar la posicion y direccion de los rectangulos
+void reiniciarRectangulos()
+{
+  rectIzqXpos = 70;
+  rectIzqYpos = 240;
+  rectIzqYdir = 0;
+  rectDerXpos = 570;
+  rectDerYpos = 240;
+  rectDerYdir = 0;
 }
 
 // Funcion para mover un rectangulo
@@ -241,6 +260,8 @@ void colisionesCirculoRect(double rectX, double rectY)
     ypos = (ypos < rectY) ? rectY - Alto / 2.0 - RadiusOfBall : rectY + Alto / 2.0 + RadiusOfBall;
   }
 }
+
+// TODO: intentar mejorar las colisiones entre el circulo y rectangulo para que el circulo ahora si sea un circulo
 
 // Funcion para mostrar en la ventana
 void Display(void)
@@ -397,12 +418,143 @@ void init(void)
   squash = 0.9;
   rot = 0;
   // Inicializa la posicion y parametros de los rectangulos
-  rectIzqXpos = 70;
-  rectIzqYpos = 240;
-  rectIzqYdir = 0;
-  rectDerXpos = 570;
-  rectDerYpos = 240;
-  rectDerYdir = 0;
+  reiniciarRectangulos();
+}
+
+// Funcion para detectar cuando una tecla es presionada
+void keyDown(unsigned char key, int x, int y)
+{
+  switch (key)
+  {
+  // Cuando se presiona la tecla w
+  case 'w':
+    // Se pone que se intenta ir arriba rectangulo izquierdo
+    rectIzqArriba = true;
+    if (rectIzqAbajo)
+    {
+      // Si tambien se intenta ir abajo, no se mueve
+      rectIzqYdir = 0;
+    }
+    else
+    {
+      // Si solo intenta ir arriba, se mueve
+      rectIzqYdir = 1;
+    }
+    break;
+  // Cuando se presiona la tecla s
+  case 's':
+    // Se pone que se intenta ir abajo rectangulo izquierdo
+    rectIzqAbajo = true;
+    if (rectIzqArriba)
+    {
+      // Si tambien se intenta ir arriba, no se mueve
+      rectIzqYdir = 0;
+    }
+    else
+    {
+      // Si solo intenta ir abajo, se mueve
+      rectIzqYdir = -1;
+    }
+    break;
+  // Cuando se presiona la tecla o
+  case 'o':
+    // Se pone que se intenta ir arriba rectangulo derecho
+    rectDerArriba = true;
+    if (rectDerAbajo)
+    {
+      // Si tambien se intenta ir abajo, no se mueve
+      rectDerYdir = 0;
+    }
+    else
+    {
+      // Si solo intenta ir arriba, se mueve
+      rectDerYdir = 1;
+    }
+    break;
+  // Cuando se presiona la tecla l
+  case 'l':
+    // Se pone que se intenta ir abajo rectangulo derecho
+    rectDerAbajo = true;
+    if (rectDerArriba)
+    {
+      // Si tambien se intenta ir arriba, no se mueve
+      rectDerYdir = 0;
+    }
+    else
+    {
+      // Si solo intenta ir abajo, se mueve
+      rectDerYdir = -1;
+    }
+    break;
+  }
+}
+
+// Funcion para detectar cuando una tecla es soltada
+void keyUp(unsigned char key, int x, int y)
+{
+  switch (key)
+  {
+  // Cuando se suelta la tecla w
+  case 'w':
+    // Se pone que ya no se intenta ir arriba rectangulo izquierdo
+    rectIzqArriba = false;
+    if (rectIzqAbajo)
+    {
+      // Si se esta intentando ir abajo, se mueve
+      rectIzqYdir = -1;
+    }
+    else
+    {
+      // Si no se esta intentando ir abajo, se deja de mover
+      rectIzqYdir = 0;
+    }
+    break;
+  // Cuando se suelta la tecla s
+  case 's':
+    // Se pone que ya no se intenta ir abajo rectangulo izquierdo
+    rectIzqAbajo = false;
+    if (rectIzqArriba)
+    {
+      // Si se esta intentando ir arriba, se mueve
+      rectIzqYdir = 1;
+    }
+    else
+    {
+      // Si no se esta intentando ir arriba, se deja de mover
+      rectIzqYdir = 0;
+    }
+    break;
+  // Cuando se suelta la tecla o
+  case 'o':
+    // Se pone que ya no se intenta ir arriba rectangulo derecho
+    rectDerArriba = false;
+    if (rectDerAbajo)
+    {
+      // Si se esta intentando ir abajo, se mueve
+      rectDerYdir = -1;
+    }
+    else
+    {
+      // Si no se esta intentando ir abajo, se deja de mover
+      rectDerYdir = 0;
+    }
+    break;
+  // Cuando se suelta la tecla l
+  case 'l':
+    // Se pone que ya no se intenta ir abajo rectangulo derecho
+    rectDerAbajo = false;
+    if (rectDerArriba)
+    {
+      // Si se esta intentando ir arriba, se mueve
+      rectDerYdir = 1;
+    }
+    else
+    {
+      // Si no se esta intentando ir arriba, se deja de mover
+      rectDerYdir = 0;
+    }
+    break;
+  }
 }
 
 // Funcion para que todo funcione
@@ -417,8 +569,12 @@ int main(int argc, char *argv[])
   // Registra las funciones de display y reshape
   glutDisplayFunc(Display);
   glutReshapeFunc(reshape);
+  // Registra la funcion para detectar teclas presionadas
+  glutKeyboardFunc(keyDown);
+  // Registra la funcion para detectar teclas soltas
+  glutKeyboardUpFunc(keyUp);
   // Loop para correr
   glutMainLoop();
 
-  return 1;
+  return 0;
 }
